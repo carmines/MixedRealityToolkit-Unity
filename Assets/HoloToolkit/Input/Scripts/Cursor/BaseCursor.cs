@@ -148,7 +148,7 @@ namespace HoloToolkit.Unity.InputModule
 
             if (Application.isEditor && eventData.InputSource.GetType() == typeof(SimulatedInputSource))
             {
-                inputSource = (SimulatedInputSource)eventData.InputSource;
+                inputSource = eventData.InputSource as SimulatedInputSource;
             }
 
             InteractionSourceKind sourceKind;
@@ -177,7 +177,7 @@ namespace HoloToolkit.Unity.InputModule
 
             if (Application.isEditor && eventData.InputSource.GetType() == typeof(SimulatedInputSource))
             {
-                inputSource = (SimulatedInputSource)eventData.InputSource;
+                inputSource = eventData.InputSource as SimulatedInputSource;
             }
 
             InteractionSourceKind sourceKind;
