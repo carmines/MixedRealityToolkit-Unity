@@ -27,27 +27,56 @@ namespace HoloToolkit.Unity.InputModule
         [SerializeField]
         private MotionControllerInfo.ControllerElementEnum element = MotionControllerInfo.ControllerElementEnum.PointingPose;
 
-#if UNITY_WSA && UNITY_2017_2_OR_NEWER
         public Handedness Handedness
         {
-            get { return handedness; }
-            set { handedness = value; }
+            get
+            {
+                if (handedness == Handedness.Both || handedness == Handedness.None)
+                {
+                    handedness = Handedness.Left;
+                }
+
+                return handedness;
+            }
+            set
+            {
+                if (value == Handedness.Both || value == Handedness.None)
+                {
+                    Debug.LogWarning("Controller Finder must have a valid handedness.");
+                    handedness = Handedness.Left;
+                }
+                else
+                {
+                    handedness = value;
+                }
+            }
         }
 
         [SerializeField]
+        [Tooltip("Must be Left or Right.")]
         private Handedness handedness = Handedness.Left;
-#endif
 
         public Transform ElementTransform { get { return elementTransform; } private set { elementTransform = value; } }
         private Transform elementTransform;
 
         protected MotionControllerInfo ControllerInfo;
 
+        #region Monobehaviour Implementation
+
+        private void OnValidate()
+        {
+            if (handedness == Handedness.Both || handedness == Handedness.None)
+            {
+                Debug.LogWarning(gameObject.name + " Controller Finder must have a valid handedness.");
+                handedness = Handedness.Left;
+            }
+        }
+
         protected virtual void OnEnable()
         {
 #if UNITY_WSA && UNITY_2017_2_OR_NEWER
             // Look if the controller has loaded.
-            if (MotionControllerVisualizer.Instance.TryGetControllerModel((InteractionSourceHandedness)Handedness.Left, out ControllerInfo))
+            if (MotionControllerVisualizer.Instance.TryGetControllerModel((InteractionSourceHandedness)Handedness, out ControllerInfo))
             {
                 AddControllerTransform(ControllerInfo);
             }
@@ -73,6 +102,8 @@ namespace HoloToolkit.Unity.InputModule
                 MotionControllerVisualizer.Instance.OnControllerModelUnloaded -= RemoveControllerTransform;
             }
         }
+
+        #endregion Monobehaviour Implementation
 
         protected virtual void AddControllerTransform(MotionControllerInfo newController)
         {

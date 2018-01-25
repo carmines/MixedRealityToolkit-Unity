@@ -13,7 +13,7 @@ namespace HoloToolkit.Unity.InputModule
     /// <summary>
     /// Base Pointer class for pointers that exist in the scene as GameObjects.
     /// </summary>
-    public abstract class BasePointer : AttachToController, IInputHandler, IPointer
+    public abstract class BaseControllerPointer : AttachToController, IInputHandler, IPointer
     {
         [Header("Cursor")]
         [SerializeField]
@@ -95,11 +95,6 @@ namespace HoloToolkit.Unity.InputModule
 
         #region Monobehaviour Implementation
 
-        protected virtual void Awake()
-        {
-            SetCursor();
-        }
-
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -118,8 +113,7 @@ namespace HoloToolkit.Unity.InputModule
             Debug.Assert(InputManager.GlobalListeners.Contains(FocusManager.Instance.gameObject));
             Debug.Assert(InputSourceParent != null, "This Pointer must have a Input Source Assigned");
 
-            PointerId = FocusManager.GenerateNewPointerId();
-            PointerName = gameObject.name;
+            SetCursor();
         }
 
         protected override void OnDisable()
@@ -176,9 +170,25 @@ namespace HoloToolkit.Unity.InputModule
 
         #region IPointer Implementation
 
-        public uint PointerId { get; private set; }
+        private uint pointerId;
+        public uint PointerId
+        {
+            get
+            {
+                if (pointerId == 0)
+                {
+                    pointerId = FocusManager.GenerateNewPointerId();
+                }
 
-        public string PointerName { get; set; }
+                return pointerId;
+            }
+        }
+
+        public string PointerName
+        {
+            get { return gameObject.name; }
+            set { gameObject.name = value; }
+        }
 
         public IInputSource InputSourceParent { get; set; }
 

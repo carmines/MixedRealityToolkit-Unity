@@ -22,8 +22,6 @@ namespace HoloToolkit.Unity.InputModule.Tests
             {
                 particles.transform.position = focusDetails.Point;
                 particles.Emit(60);
-
-                eventData.Use(); // Mark the event as used, so it doesn't fall through to other handlers.
             }
         }
 

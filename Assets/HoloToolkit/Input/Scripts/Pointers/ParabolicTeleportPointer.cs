@@ -13,7 +13,7 @@ namespace HoloToolkit.Unity.InputModule
         [Header("Pointer Control")]
         [SerializeField]
         [Tooltip("Pointers that you want to disable while teleporting")]
-        private BasePointer[] disableWhileActive;
+        private BaseControllerPointer[] disableWhileActive;
 
         //[Header("Parabola settings")]
         //[SerializeField]

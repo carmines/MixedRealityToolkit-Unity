@@ -76,18 +76,6 @@ namespace HoloToolkit.Unity.InputModule
             }
         }
 
-        protected override void OnAttachToController()
-        {
-            // Subscribe to interaction events
-            InputManager.Instance.AddGlobalListener(gameObject);
-        }
-
-        protected override void OnDetachFromController()
-        {
-            // Unsubscribe from interaction events
-            InputManager.Instance.RemoveGlobalListener(gameObject);
-        }
-
         /// The position of the navigation target
         public virtual Vector3 TeleportTargetPosition
         {
@@ -197,7 +185,7 @@ namespace HoloToolkit.Unity.InputModule
 
         public override void OnPreRaycast()
         {
-            if (lineBase == null) { return; }
+            if (LineBase == null) { return; }
 
             // Make sure our array will hold
             if (Rays == null || Rays.Length != LineCastResolution)
@@ -210,11 +198,11 @@ namespace HoloToolkit.Unity.InputModule
             DistorterGravity.enabled = false;
 
             float stepSize = 1f / Rays.Length;
-            Vector3 lastPoint = lineBase.GetUnclampedPoint(0f);
+            Vector3 lastPoint = LineBase.GetUnclampedPoint(0f);
 
             for (int i = 0; i < Rays.Length; i++)
             {
-                Vector3 currentPoint = lineBase.GetUnclampedPoint(stepSize * (i + 1));
+                Vector3 currentPoint = LineBase.GetUnclampedPoint(stepSize * (i + 1));
                 Rays[i] = new RayStep(lastPoint, currentPoint);
                 lastPoint = currentPoint;
             }
@@ -232,7 +220,7 @@ namespace HoloToolkit.Unity.InputModule
 
             if (InteractionEnabled)
             {
-                lineBase.enabled = true;
+                LineBase.enabled = true;
 
                 // If we hit something
                 if (Result.CurrentPointerTarget != null)
@@ -286,11 +274,11 @@ namespace HoloToolkit.Unity.InputModule
                     }
 
                     // Clamp the end of the parabola to the result hit's point
-                    lineBase.LineEndClamp = lineBase.GetNormalizedLengthFromWorldLength(clearWorldLength, LineCastResolution);
+                    LineBase.LineEndClamp = LineBase.GetNormalizedLengthFromWorldLength(clearWorldLength, LineCastResolution);
                 }
                 else
                 {
-                    lineBase.LineEndClamp = 1f;
+                    LineBase.LineEndClamp = 1f;
                 }
 
                 // Set the line color
@@ -302,7 +290,7 @@ namespace HoloToolkit.Unity.InputModule
             }
             else
             {
-                lineBase.enabled = false;
+                LineBase.enabled = false;
             }
         }
 

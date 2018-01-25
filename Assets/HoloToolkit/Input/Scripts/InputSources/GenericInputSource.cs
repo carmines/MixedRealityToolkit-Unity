@@ -20,10 +20,7 @@ namespace HoloToolkit.Unity.InputModule
             SourceId = InputManager.GenerateNewSourceId();
             SourceName = name;
             supportedInputInfo = _supportedInputInfo;
-            if (pointers == null)
-            {
-                Pointers = GazeManager.Instance.Pointers;
-            }
+            Pointers = pointers ?? GazeManager.Instance.Pointers;
         }
 
         public uint SourceId { get; private set; }

@@ -64,23 +64,12 @@ namespace HoloToolkit.Unity.InputModule
             if (!canUpdateTransform) { return; }
 
             transform.position = pointer.TeleportTargetPosition;
-            Quaternion rotation;
 
-            // This is kind of a cheat - if the result is valid we can be reasonably sure the dot will permit using the camera's forward
-            if (pointer.TeleportSurfaceResult == TeleportSurfaceResult.Valid)
-            {
-                Vector3 forward = CameraCache.Main.transform.forward;
-                forward.y = 0f;
-                rotation = Quaternion.LookRotation(forward.normalized, pointer.TeleportTargetNormal);
-            }
-            else
-            {
-                // Otherwise, just use the navigation normal directly
-                rotation = Quaternion.FromToRotation(Vector3.up, pointer.TeleportTargetNormal);
-            }
+            Vector3 forward = CameraCache.Main.transform.forward;
+            forward.y = 0f;
 
             // Smooth out rotation just a tad to prevent jarring transitions
-            PrimaryCursorVisual.rotation = Quaternion.Lerp(PrimaryCursorVisual.rotation, rotation, 0.5f);
+            PrimaryCursorVisual.rotation = Quaternion.Lerp(PrimaryCursorVisual.rotation, Quaternion.LookRotation(forward.normalized, Vector3.up), 0.5f);
 
             // Point the arrow towards the target orientation
             arrowTransform.eulerAngles = new Vector3(0f, pointer.PointerOrientation, 0f);

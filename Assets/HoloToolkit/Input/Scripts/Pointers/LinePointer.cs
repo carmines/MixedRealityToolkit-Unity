@@ -9,7 +9,7 @@ namespace HoloToolkit.Unity.InputModule
     [RequireComponent(typeof(DistorterGravity))]
     [UseWith(typeof(LineBase))]
     [UseWith(typeof(LineRendererBase))]
-    public class LinePointer : BasePointer
+    public class LinePointer : BaseControllerPointer
     {
         [Header("Colors")]
         [SerializeField]
@@ -34,7 +34,7 @@ namespace HoloToolkit.Unity.InputModule
 
         [SerializeField]
         [DropDownComponent(true, true)]
-        protected LineBase lineBase;
+        protected LineBase LineBase;
 
         [SerializeField]
         [DropDownComponent(true, true)]
@@ -46,10 +46,10 @@ namespace HoloToolkit.Unity.InputModule
         {
             base.OnEnable();
 
-            lineBase = GetComponent<LineBase>();
+            LineBase = GetComponent<LineBase>();
             DistorterGravity = GetComponent<DistorterGravity>();
-            lineBase.AddDistorter(DistorterGravity);
-            LineRenderers = lineBase.GetComponentsInChildren<LineRendererBase>();
+            LineBase.AddDistorter(DistorterGravity);
+            LineRenderers = LineBase.GetComponentsInChildren<LineRendererBase>();
         }
 
         /// <summary>
@@ -65,14 +65,14 @@ namespace HoloToolkit.Unity.InputModule
 
         public override void OnPreRaycast()
         {
-            if (lineBase == null) { return; }
+            if (LineBase == null) { return; }
 
             Vector3 pointerPosition;
             TryGetPointerPosition(out pointerPosition);
 
             // Set our first and last points
-            lineBase.FirstPoint = pointerPosition;
-            lineBase.LastPoint = pointerPosition + (PointerDirection * (PointerExtent ?? FocusManager.GlobalPointingExtent));
+            LineBase.FirstPoint = pointerPosition;
+            LineBase.LastPoint = pointerPosition + (PointerDirection * (PointerExtent ?? FocusManager.GlobalPointingExtent));
 
             // Make sure our array will hold
             if (Rays == null || Rays.Length != LineCastResolution)
@@ -88,11 +88,11 @@ namespace HoloToolkit.Unity.InputModule
             }
 
             float stepSize = 1f / Rays.Length;
-            Vector3 lastPoint = lineBase.GetUnclampedPoint(0f);
+            Vector3 lastPoint = LineBase.GetUnclampedPoint(0f);
 
             for (int i = 0; i < Rays.Length; i++)
             {
-                Vector3 currentPoint = lineBase.GetUnclampedPoint(stepSize * (i + 1));
+                Vector3 currentPoint = LineBase.GetUnclampedPoint(stepSize * (i + 1));
                 Rays[i] = new RayStep(lastPoint, currentPoint);
                 lastPoint = currentPoint;
             }
@@ -107,7 +107,7 @@ namespace HoloToolkit.Unity.InputModule
 
             if (InteractionEnabled)
             {
-                lineBase.enabled = true;
+                LineBase.enabled = true;
 
                 if (SelectPressed)
                 {
@@ -133,7 +133,7 @@ namespace HoloToolkit.Unity.InputModule
                     }
 
                     // Clamp the end of the parabola to the result hit's point
-                    lineBase.LineEndClamp = lineBase.GetNormalizedLengthFromWorldLength(clearWorldLength, LineCastResolution);
+                    LineBase.LineEndClamp = LineBase.GetNormalizedLengthFromWorldLength(clearWorldLength, LineCastResolution);
 
                     if (FocusTarget != null)
                     {
@@ -148,12 +148,12 @@ namespace HoloToolkit.Unity.InputModule
                 }
                 else
                 {
-                    lineBase.LineEndClamp = 1f;
+                    LineBase.LineEndClamp = 1f;
                 }
             }
             else
             {
-                lineBase.enabled = false;
+                LineBase.enabled = false;
             }
 
             if (FocusLocked)

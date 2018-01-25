@@ -396,7 +396,7 @@ MonoBehaviour:
   SnapCursor: 0
   UseGazeBasedNormal: 0
   HideCursorOnFocus: 0
-  CursorParameters: []
+  cursorParameters: []
 --- !u!1 &142212807
 GameObject:
   m_ObjectHideFlags: 0
@@ -2103,7 +2103,7 @@ MonoBehaviour:
   SnapCursor: 1
   UseGazeBasedNormal: 0
   HideCursorOnFocus: 0
-  CursorParameters: []
+  cursorParameters: []
 --- !u!114 &718516060
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3913,7 +3913,7 @@ MonoBehaviour:
   SnapCursor: 0
   UseGazeBasedNormal: 0
   HideCursorOnFocus: 0
-  CursorParameters: []
+  cursorParameters: []
 --- !u!1 &1527663681
 GameObject:
   m_ObjectHideFlags: 0

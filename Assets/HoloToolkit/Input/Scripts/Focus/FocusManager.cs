@@ -748,24 +748,17 @@ namespace HoloToolkit.Unity.InputModule
 
         public void OnSourceDetected(SourceStateEventData eventData)
         {
-            int pointerCnt = 0;
-            if (eventData.InputSource.Pointers != null)
-            {
-                pointerCnt = eventData.InputSource.Pointers.Length;
-            }
-
-            Debug.LogFormat("Registering {1} pointers for {0}.", eventData.InputSource.SourceName, pointerCnt.ToString());
-
+            // If our input source does not have any pointers, then skip.
             if (eventData.InputSource.Pointers == null) { return; }
 
             foreach (var sourcePointer in eventData.InputSource.Pointers)
             {
+                Debug.Assert(sourcePointer.PointerId != 0, string.Format("{0} does not have a valid pointer id!", sourcePointer));
+
                 PointerData pointerData = GetPointerData(sourcePointer);
 
                 // If we've already registered this pointer, then skip
                 if (pointerData != null) { continue; }
-
-                Debug.Log("Registering " + sourcePointer.PointerName);
 
                 // Special Registration for Gaze
                 if (eventData.InputSource.SourceId == GazeManager.Instance.SourceId)
@@ -797,6 +790,7 @@ namespace HoloToolkit.Unity.InputModule
 
         public void OnSourceLost(SourceStateEventData eventData)
         {
+            // If the input source does not have pointers, then skip.
             if (eventData.InputSource.Pointers == null) { return; }
 
             foreach (var sourcePointer in eventData.InputSource.Pointers)
@@ -811,9 +805,7 @@ namespace HoloToolkit.Unity.InputModule
                     continue;
                 }
 
-                Debug.Log("Unregistering " + sourcePointer.PointerName);
-
-                // Raise focus events if needed
+                // Raise focus events if needed.
                 if (pointerData.CurrentPointerTarget != null)
                 {
                     GameObject unfocusedObject = pointerData.CurrentPointerTarget;

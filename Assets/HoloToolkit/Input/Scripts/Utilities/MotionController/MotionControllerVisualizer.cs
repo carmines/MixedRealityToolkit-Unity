@@ -349,8 +349,8 @@ namespace HoloToolkit.Unity.InputModule
                 reader.ReadBytes(fileBytes);
             }
 #else
-            IntPtr controllerModel = new IntPtr();
-            uint outputSize = 0;
+            uint outputSize;
+            IntPtr controllerModel;
 
             if (TryGetMotionControllerModel(source.id, out outputSize, out controllerModel))
             {
@@ -367,7 +367,7 @@ namespace HoloToolkit.Unity.InputModule
 #endif
 
             controllerModelGameObject = new GameObject { name = "glTFController" };
-            GLTFComponent gltfScript = controllerModelGameObject.AddComponent<GLTFComponent>();
+            var gltfScript = controllerModelGameObject.AddComponent<GLTFComponent>();
             gltfScript.GLTFConstant = gltfScript.GLTFStandard = gltfScript.GLTFStandardSpecular = GLTFMaterial.shader;
             gltfScript.UseStream = true;
             gltfScript.GLTFStream = new MemoryStream(fileBytes);
