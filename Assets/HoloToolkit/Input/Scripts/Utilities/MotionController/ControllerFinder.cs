@@ -24,6 +24,7 @@ namespace HoloToolkit.Unity.InputModule
             set { element = value; }
         }
 
+        [Header("Controller Finder")]
         [SerializeField]
         private MotionControllerInfo.ControllerElementEnum element = MotionControllerInfo.ControllerElementEnum.PointingPose;
 

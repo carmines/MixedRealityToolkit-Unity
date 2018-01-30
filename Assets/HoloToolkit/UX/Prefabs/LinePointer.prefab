@@ -103,7 +103,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   element: 6
-  handedness: 0
+  handedness: 1
   SetChildrenInactiveWhenDetached: 1
   PositionOffset: {x: 0, y: 0, z: 0}
   RotationOffset: {x: 0, y: 0, z: 0}
@@ -237,7 +237,7 @@ MonoBehaviour:
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
   LineCastResolution: 25
-  lineBase: {fileID: 114023736100485690}
+  LineBase: {fileID: 114023736100485690}
   LineRenderers: []
 --- !u!114 &114659575208031024
 MonoBehaviour:
