@@ -115,7 +115,7 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000011070707148}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -229,7 +229,7 @@ MonoBehaviour:
   raycastLayerMasks:
   - serializedVersion: 2
     m_Bits: 4294967291
-  stabilizer: {fileID: 0}
+  stabilizer: {fileID: 114000011980027866}
   gazeTransform: {fileID: 0}
   debugDrawRay: 0
 --- !u!114 &114000012434513746
