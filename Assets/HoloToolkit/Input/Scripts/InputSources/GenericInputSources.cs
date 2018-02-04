@@ -33,7 +33,7 @@ namespace HoloToolkit.Unity.InputModule
         protected string[] LastDeviceList;
 
         protected BaseInputMapping<XboxControllerInputType> XboxControllerMapping;
-        protected BaseInputMapping<ViveControllerInputType> ViveControllerMapping;
+        protected BaseInputMapping<OpenVRControllerInputType> ViveControllerMapping;
         protected BaseInputMapping<OculusControllerInputType> OculusControllerMapping;
 
         protected readonly HashSet<GenericInputSource> InputSources = new HashSet<GenericInputSource>();
