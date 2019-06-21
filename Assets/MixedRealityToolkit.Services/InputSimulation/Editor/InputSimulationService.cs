@@ -10,6 +10,7 @@ using UnityEngine;
 
 namespace Microsoft.MixedReality.Toolkit.Input
 {
+
     [MixedRealityDataProvider(
         typeof(IMixedRealityInputSystem),
         SupportedPlatforms.WindowsEditor | SupportedPlatforms.MacEditor | SupportedPlatforms.LinuxEditor,
@@ -125,8 +126,15 @@ namespace Microsoft.MixedReality.Toolkit.Input
                 // In the simulated eye gaze condition, let's set the eye tracking calibration status automatically to true
                 InputSystem?.EyeGazeProvider?.UpdateEyeTrackingStatus(this, true);
 
+                var newGaze = new Ray(CameraCache.Main.transform.position, CameraCache.Main.transform.forward);
+                var now = DateTime.UtcNow;
+
                 // Update the simulated eye gaze with the current camera position and forward vector
-                InputSystem?.EyeGazeProvider?.UpdateEyeGaze(this, new Ray(CameraCache.Main.transform.position, CameraCache.Main.transform.forward), DateTime.UtcNow);
+                InputSystem?.EyeGazeProvider?.UpdateEyeGaze(this, newGaze, DateTime.UtcNow);
+
+                // store local copies of the gaze
+                LastPose = CurrentPose;
+                CurrentPose = new SimulatedEyePose(now, newGaze);
             }
 
             switch (profile.HandSimulationMode)
@@ -197,6 +205,24 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         /// <inheritdoc/>
         bool IMixedRealityEyeGazeDataProvider.SmoothEyeTracking { get; set; }
+
+        public MixedRealityPermissionState PermissionState { get; private set; } = MixedRealityPermissionState.Unspecified;
+
+        public MixedRealityCalibratedState CalibratedState { get; private set; } = MixedRealityCalibratedState.NotSet;
+
+        public IMixedRealityPose CurrentPose
+        {
+            get { return currentPose; }
+            private set { currentPose = value; }
+        }
+        private IMixedRealityPose currentPose = null;
+
+        public IMixedRealityPose LastPose
+        {
+            get { return lastPose; }
+            private set { lastPose = value; }
+        }
+        private IMixedRealityPose lastPose = null;
 
         private void EnableCameraControl()
         {

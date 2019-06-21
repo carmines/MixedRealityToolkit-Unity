@@ -172,9 +172,7 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
 
                     if (SmoothEyeTracking)
                     {
-                        newGaze = SmoothGaze(newGaze);  // TODO: this will have to be made protected for overriding the base class
-                                                        // Modify MRTK\MixedRealityToolkit.Providers\WindowsMixedReality\WindowsMixedRealityEyeGazeDataProvider.cs
-
+                        newGaze = SmoothGaze(newGaze);
                     }
 
                     InputSystem?.EyeGazeProvider?.UpdateEyeGaze(this, newGaze, eyes.UpdateTimestamp.TargetTime.UtcDateTime);
