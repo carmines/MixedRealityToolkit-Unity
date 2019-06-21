@@ -6,16 +6,52 @@ using Microsoft.MixedReality.Toolkit.Utilities;
 using Microsoft.MixedReality.Toolkit.Windows.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
-#if WINDOWS_UWP
+#if ENABLE_WINMD_SUPPORT
+using Windows.System;
 using Windows.Perception;
 using Windows.Perception.People;
 using Windows.UI.Input.Spatial;
+using Windows.UI.ViewManagement;
 #endif
 
 namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
 {
+    public class MixedRealityEyePose : IMixedRealityPose
+    {
+        public bool IsValid
+        {
+            get
+            {
+                var delta = DateTime.Now.ToUniversalTime().Subtract(Timestamp).TotalMilliseconds;
+                if (delta > 250.0)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+
+        public DateTime Timestamp { get; private set; } = DateTime.Now.ToUniversalTime();
+
+        public Vector3 Origin => Ray.origin;
+
+        public Vector3 Direction => Ray.direction;
+
+        public Ray Ray { get; private set; }
+
+        public MixedRealityEyePose(DateTime timeStamp, Ray ray)
+        {
+            Timestamp = timeStamp;
+            Ray = ray;
+        }
+    }
+
     [MixedRealityDataProvider(
         typeof(IMixedRealityInputSystem),
         SupportedPlatforms.WindowsUniversal,
@@ -42,6 +78,29 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
 
         public IMixedRealityEyeSaccadeProvider SaccadeProvider => this;
 
+        public MixedRealityPermissionState PermissionState { get; private set; } = MixedRealityPermissionState.Unspecified;
+
+        public MixedRealityCalibratedState CalibratedState { get; private set; } = MixedRealityCalibratedState.NotSet;
+
+        public IMixedRealityPose CurrentPose
+        {
+            get { return currentPose; }
+            private set { currentPose = value; }
+        }
+        private IMixedRealityPose currentPose = null;
+
+        public IMixedRealityPose LastPose
+        {
+            get { return lastPose; }
+            private set { lastPose = value; }
+        }
+        private IMixedRealityPose lastPose = null;
+
+        private const float TotalTimeInCalibratedToBeValid = 2.0f;
+        private float totalTimeInCalibrated = 0.0f;
+        private bool lastPolledCalibratedValue = false;
+
+
         private readonly float smoothFactorNormalized = 0.96f;
         private readonly float saccadeThreshInDegree = 2.5f; // In degrees (not radians)
 
@@ -54,12 +113,6 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
         public event Action OnSaccade;
         public event Action OnSaccadeX;
         public event Action OnSaccadeY;
-
-#if WINDOWS_UWP
-
-        private static bool askedForETAccessAlready = false; // To make sure that this is only triggered once.
-
-#endif // WINDOWS_UWP
 
         #region IMixedRealityCapabilityCheck Implementation
         
@@ -80,19 +133,30 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
 
         public override void Initialize()
         {
-            if (Application.isPlaying && WindowsApiChecker.UniversalApiContractV8_IsAvailable)
-            {
-#if WINDOWS_UWP
-                AskForETPermission();
-#endif
-                ReadProfile();
-            }
+            ReadProfile();
+
+            AskForETPermission();
         }
 
         public override void Update()
         {
-#if WINDOWS_UWP
-            if (WindowsMixedRealityUtilities.SpatialCoordinateSystem == null || !WindowsApiChecker.UniversalApiContractV8_IsAvailable)
+            if (PermissionState != MixedRealityPermissionState.Allowed)
+            {
+                return;
+            }
+
+            // if the last calibrated value is true
+            if (lastPolledCalibratedValue)
+            {
+                totalTimeInCalibrated += Time.deltaTime;
+                if (totalTimeInCalibrated > TotalTimeInCalibratedToBeValid)
+                {
+                    CalibratedState = MixedRealityCalibratedState.Calibrated;
+                }
+            }
+
+#if ENABLE_WINMD_SUPPORT
+            if (WindowsMixedRealityUtilities.SpatialCoordinateSystem == null)
             {
                 return;
             }
@@ -101,24 +165,41 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
             if (pointerPose != null)
             {
                 var eyes = pointerPose.Eyes;
-                if (eyes != null)
+                if (eyes != null && eyes.Gaze.HasValue)
                 {
-                    InputSystem?.EyeGazeProvider?.UpdateEyeTrackingStatus(this, eyes.IsCalibrationValid);
+                    // get the eye pose data
+                    Ray newGaze = new Ray(WindowsMixedRealityUtilities.SystemVector3ToUnity(eyes.Gaze.Value.Origin), WindowsMixedRealityUtilities.SystemVector3ToUnity(eyes.Gaze.Value.Direction));
 
-                    if(eyes.Gaze.HasValue)
+                    if (SmoothEyeTracking)
                     {
-                        Ray newGaze = new Ray(WindowsMixedRealityUtilities.SystemVector3ToUnity(eyes.Gaze.Value.Origin), WindowsMixedRealityUtilities.SystemVector3ToUnity(eyes.Gaze.Value.Direction));
+                        newGaze = SmoothGaze(newGaze);  // TODO: this will have to be made protected for overriding the base class
+                                                        // Modify MRTK\MixedRealityToolkit.Providers\WindowsMixedReality\WindowsMixedRealityEyeGazeDataProvider.cs
 
-                        if (SmoothEyeTracking)
+                    }
+
+                    InputSystem?.EyeGazeProvider?.UpdateEyeGaze(this, newGaze, eyes.UpdateTimestamp.TargetTime.UtcDateTime);
+
+                    // store local copies of the gaze
+                    LastPose = CurrentPose;
+                    CurrentPose = new MixedRealityEyePose(eyes.UpdateTimestamp.TargetTime.UtcDateTime, newGaze);
+
+                    // determine if the eyes are calibrated
+                    var lastValue = lastPolledCalibratedValue;
+                    lastPolledCalibratedValue = eyes.IsCalibrationValid;
+
+                    // did it change state, reset values here only
+                    if (lastValue != lastPolledCalibratedValue)
+                    {
+                        totalTimeInCalibrated = 0;
+
+                        if (!lastPolledCalibratedValue)
                         {
-                            newGaze = SmoothGaze(newGaze);
+                            CalibratedState = MixedRealityCalibratedState.NotCalibrated;
                         }
-
-                        InputSystem?.EyeGazeProvider?.UpdateEyeGaze(this, newGaze, eyes.UpdateTimestamp.TargetTime.UtcDateTime);
                     }
                 }
             }
-#endif // WINDOWS_UWP
+#endif // ENABLE_WINMD_SUPPORT
         }
 
         private void ReadProfile()
@@ -139,19 +220,50 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
             SmoothEyeTracking = profile.SmoothEyeTracking;
         }
 
-#if WINDOWS_UWP
         /// <summary>
         /// Triggers a prompt to let the user decide whether to permit using eye tracking 
         /// </summary>
         private async void AskForETPermission()
         {
-            if (!askedForETAccessAlready)  // Making sure this is only triggered once
-            {
-                askedForETAccessAlready = true;
-                await EyesPose.RequestAccessAsync();
-            }
+            PermissionState = MixedRealityPermissionState.Unspecified;
+
+#if ENABLE_WINMD_SUPPORT
+            var status = await EyesPose.RequestAccessAsync();
+            PermissionState = (MixedRealityPermissionState)Enum.Parse(typeof(MixedRealityPermissionState), status.ToString());
+#else
+            await Task.Yield();
+#endif // ENABLE_WINMD_SUPPORT
         }
-#endif // WINDOWS_UWP
+
+        private bool LaunchEyeCalibration()
+        {
+            bool result = false;
+
+#if UNITY_WSA
+            UnityEngine.WSA.Application.InvokeOnUIThread(
+                async () =>
+                {
+#if ENABLE_WINMD_SUPPORT
+                    var calibrationUri = new Uri(@"ms-hololenssetup://EyeTracking");
+                    var options = new LauncherOptions();
+                    options.TargetApplicationPackageFamilyName = "Microsoft.HoloLensSetup_8wekyb3d8bbwe";
+
+                    LaunchUriResult results = await Launcher.LaunchUriForResultsAsync(calibrationUri, options);
+                    if (results.Status == LaunchUriStatus.Success)
+                    {
+                        result = true;
+                    }
+#endif // ENABLE_WINMD_SUPPORT
+                }, true);
+#endif // UNITY_WSA
+
+            if (!result)
+            {
+                Debug.LogError("Eye tracking calibration did not succeed.");
+            }
+
+            return result;
+        }
 
         private Ray SmoothGaze(Ray? newGaze)
         {

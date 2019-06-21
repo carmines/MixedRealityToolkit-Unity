@@ -11,5 +11,13 @@ namespace Microsoft.MixedReality.Toolkit.Input
         IMixedRealityEyeSaccadeProvider SaccadeProvider { get; }
 
         bool SmoothEyeTracking { get; set; }
+
+        MixedRealityPermissionState PermissionState { get; }
+
+        MixedRealityCalibratedState CalibratedState { get; }
+
+        IMixedRealityPose CurrentPose { get; }
+
+        IMixedRealityPose LastPose { get; }
     }
 }
